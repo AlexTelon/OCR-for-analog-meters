@@ -1,9 +1,9 @@
-from ast import Lambda
 from PIL import Image
-import os, sys, io
+import os
 import ImgFunctions as imf
 import FileFunctions as ff
 import NameMaker as nm
+from pathlib import Path
 
 #                       Settings for the program
 #-------------------------------------------------------------------------
@@ -22,20 +22,19 @@ AMMOUNT_OF_STEPS = 9
 #-------------------------------------------------------------------------
 
 # Make bitmaps from the bin files and store them in the input folder:
-os.system('./Bitmapizer -bitmapize')
+# os.system('./Bitmapizer -bitmapize')
 
 
 # Define input and output directories and create subfolders for each colour depth:
-PATH_INPUT = ff.getAbsPath("bmp_images/input_folder/")
-PATH_OUTPUT = ff.getAbsPath('../AMOCR-web/web-app/src/presentation-layer/public/meter-images/')
+PATH_INPUT = Path('input')
+PATH_OUTPUT = Path('output')
 
-ff.makeDirectory(PATH_INPUT)
-ff.makeDirectory(PATH_OUTPUT)
-
-ff.makeDirectory(PATH_OUTPUT+'8bit/')
-ff.makeDirectory(PATH_OUTPUT+'4bit/')
-ff.makeDirectory(PATH_OUTPUT+'2bit/')
-ff.makeDirectory(PATH_OUTPUT+'1bit/')
+PATH_INPUT.mkdir(exist_ok=True)
+(PATH_OUTPUT / '8bit').mkdir(exist_ok=True)
+(PATH_OUTPUT / '4bit').mkdir(exist_ok=True)
+(PATH_OUTPUT / '2bit').mkdir(exist_ok=True)
+(PATH_OUTPUT / '1bit').mkdir(exist_ok=True)
+outputPath8Bit = (PATH_OUTPUT / '8bit')
 
 # Function should be used with the loopTroughDirectory function in FileFunctions
 def loopTroughFunction(filePath, fileName, pathOutput):
@@ -65,7 +64,6 @@ def loopTroughFunction(filePath, fileName, pathOutput):
 
         imf.saveImageAsBMP(reducedIm, newName, newPathOutput)
 
-outputPath8Bit = PATH_OUTPUT+'8bit/'
 ff.loopTroughDirectory(PATH_INPUT, outputPath8Bit, loopTroughFunction)
 
 os.system('./Bitmapizer -convert')
