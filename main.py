@@ -38,17 +38,17 @@ PATH_INPUT.mkdir(exist_ok=True)
 output_path_8bit = (PATH_OUTPUT / '8bit')
 
 # Function should be used with the loopTroughDirectory function in FileFunctions
-def loop_through_function(file_path, file_name, pathOutput):
+def loop_through_function(file_path, filename, path_output):
 
     for i in range(0, AMMOUNT_OF_STEPS+1):
         # the quality of the picture in pixels, 100 is orgininal quality
         quality_percent = 100 - (i * PERCENT_TO_REDUCE)
 
-        new_path_output = pathOutput / f"{quality_percent}ppt"
+        new_path_output = path_output / f"{quality_percent}ppt"
 
         ff.make_directory(new_path_output)
 
-        im = Image.open(file_path / file_name)
+        im = Image.open(file_path / filename)
 
         # Removed crop since my sample image does not need it
         # croppedIm = imf.cropImage(im, SQUARE)
@@ -58,10 +58,12 @@ def loop_through_function(file_path, file_name, pathOutput):
 
         reduced_im = imf.reduce_quality_of_image(grey_im, i*PERCENT_TO_REDUCE)
         
-        name = nm.getProcessedFileName(file_name, quality_percent, color_depth='8bit')
+        name = nm.getProcessedFileName(filename, quality_percent, color_depth='8bit')
 
         imf.save_iamge_as_bmp(reduced_im, name, new_path_output)
 
-ff.loop_through_directory(PATH_INPUT, output_path_8bit, loop_through_function)
+for file in PATH_INPUT.glob('*.bmp'):
+    print(f'loop_through_directory ->On file: {file}')
+    loop_through_function(PATH_INPUT, file.name, output_path_8bit)
 
 # os.system('./Bitmapizer -convert')
