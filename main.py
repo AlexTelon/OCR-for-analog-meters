@@ -2,7 +2,6 @@ from PIL import Image
 import os
 import ImgFunctions as imf
 import FileFunctions as ff
-import NameMaker as nm
 from pathlib import Path
 
 #                       Settings for the program
@@ -37,29 +36,23 @@ PATH_INPUT.mkdir(exist_ok=True)
 (PATH_OUTPUT / '1bit').mkdir(exist_ok=True)
 output_path_8bit = (PATH_OUTPUT / '8bit')
 
-# Function should be used with the loopTroughDirectory function in FileFunctions
 def loop_through_function(file_path, filename, path_output):
-
     for i in range(0, AMMOUNT_OF_STEPS+1):
         # the quality of the picture in pixels, 100 is orgininal quality
         quality_percent = 100 - (i * PERCENT_TO_REDUCE)
 
         new_path_output = path_output / f"{quality_percent}ppt"
-
         ff.make_directory(new_path_output)
-
         im = Image.open(file_path / filename)
 
         # Removed crop since my sample image does not need it
         # croppedIm = imf.cropImage(im, SQUARE)
         # greyIm = imf.makeGrayscale(croppedIm)
 
-        grey_im = imf.make_grayscale(im)
-
+        grey_im    = imf.make_grayscale(im)
         reduced_im = imf.reduce_quality_of_image(grey_im, i*PERCENT_TO_REDUCE)
-        
-        name = nm.getProcessedFileName(filename, quality_percent, color_depth='8bit')
 
+        name = "_".join([Path(filename).stem, '8bit', f'{quality_percent}ppt'])
         imf.save_iamge_as_bmp(reduced_im, name, new_path_output)
 
 for file in PATH_INPUT.glob('*.bmp'):
