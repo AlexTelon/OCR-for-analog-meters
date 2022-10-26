@@ -35,37 +35,33 @@ PATH_INPUT.mkdir(exist_ok=True)
 (PATH_OUTPUT / '4bit').mkdir(exist_ok=True)
 (PATH_OUTPUT / '2bit').mkdir(exist_ok=True)
 (PATH_OUTPUT / '1bit').mkdir(exist_ok=True)
-outputPath8Bit = (PATH_OUTPUT / '8bit')
+output_path_8bit = (PATH_OUTPUT / '8bit')
 
 # Function should be used with the loopTroughDirectory function in FileFunctions
-def loopTroughFunction(filePath, fileName, pathOutput):
+def loop_through_function(file_path, file_name, pathOutput):
 
-    for i in range(0,AMMOUNT_OF_STEPS+1):
-        #print('loopTroughFunction -> Loop: '+str(i))
-        #print('loopTroughFunction -> Filename: '+ filePath)
-
+    for i in range(0, AMMOUNT_OF_STEPS+1):
         # the quality of the picture in pixels, 100 is orgininal quality
-        qualityPercent = 100 - (i * PERCENT_TO_REDUCE)
+        quality_percent = 100 - (i * PERCENT_TO_REDUCE)
 
-        newPathOutput = pathOutput / f"{qualityPercent}ppt"
+        new_path_output = pathOutput / f"{quality_percent}ppt"
 
-        ff.makeDirectory(newPathOutput)
+        ff.make_directory(new_path_output)
 
-        im = Image.open(filePath / fileName)
+        im = Image.open(file_path / file_name)
 
         # Removed crop since my sample image does not need it
         # croppedIm = imf.cropImage(im, SQUARE)
         # greyIm = imf.makeGrayscale(croppedIm)
 
-        greyIm = imf.makeGrayscale(im)
+        grey_im = imf.make_grayscale(im)
 
-        reducedIm = imf.reduceQualityOfImage(greyIm, i*PERCENT_TO_REDUCE)
+        reduced_im = imf.reduce_quality_of_image(grey_im, i*PERCENT_TO_REDUCE)
         
-        colorDepth = '8bit'
-        newName = nm.getProcessedFileName(fileName, qualityPercent, colorDepth)
+        name = nm.getProcessedFileName(file_name, quality_percent, color_depth='8bit')
 
-        imf.saveImageAsBMP(reducedIm, newName, newPathOutput)
+        imf.save_iamge_as_bmp(reduced_im, name, new_path_output)
 
-ff.loopTroughDirectory(PATH_INPUT, outputPath8Bit, loopTroughFunction)
+ff.loop_through_directory(PATH_INPUT, output_path_8bit, loop_through_function)
 
 # os.system('./Bitmapizer -convert')

@@ -2,24 +2,16 @@ from PIL import Image
 import math
 from pathlib import Path
 
-def makeGrayscale(im):
-    
-    gsIm = im.convert('L')
+def make_grayscale(im: Image) -> Image:
+    return im.convert('L')
 
-    return gsIm
+def crop_image(im: Image, box) -> Image:
+    return im.crop(box)
 
-def cropImage(im: Image, box):
-
-    cropImage = im.crop(box)
-
-    return cropImage
-
-
-def saveImageAsBMP(im: Image, fileName: str, path: Path):
+def save_iamge_as_bmp(im: Image, fileName: str, path: Path) -> None:
     im.save(path / (fileName+'.bmp'))
 
-
-def reduceQualityOfImage(im, reducePercentage):
+def reduce_quality_of_image(im: Image, reducePercentage: float):
     if reducePercentage > 0:
     
         width = im.size[0]
