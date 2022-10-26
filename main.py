@@ -8,10 +8,11 @@ from pathlib import Path
 #                       Settings for the program
 #-------------------------------------------------------------------------
 
+# Not needed with my current sample image. too lazy to edit it to the original size right now.
 # The square that the program will cut out and use
 # The first two numbers represent upper left corner of the square
 # The last two numbers represent lower right corner of the square
-SQUARE = (130, 300, 270, 370)
+# SQUARE = (130, 300, 270, 370)
 
 # The ammount of pixels that are reduced for each step
 PERCENT_TO_REDUCE = 10
@@ -46,26 +47,25 @@ def loopTroughFunction(filePath, fileName, pathOutput):
         # the quality of the picture in pixels, 100 is orgininal quality
         qualityPercent = 100 - (i * PERCENT_TO_REDUCE)
 
-        newPathOutput = pathOutput+str(qualityPercent)+'ppt/'
+        newPathOutput = pathOutput / f"{qualityPercent}ppt"
 
         ff.makeDirectory(newPathOutput)
 
-        im = Image.open(filePath+fileName)
+        im = Image.open(filePath / fileName)
 
-        croppedIm = imf.cropImage(im, SQUARE)
+        # Removed crop since my sample image does not need it
+        # croppedIm = imf.cropImage(im, SQUARE)
+        # greyIm = imf.makeGrayscale(croppedIm)
 
-        greyIm = imf.makeGrayscale(croppedIm)
+        greyIm = imf.makeGrayscale(im)
 
         reducedIm = imf.reduceQualityOfImage(greyIm, i*PERCENT_TO_REDUCE)
         
-        colorDepth = pathOutput[-5]+pathOutput[-4]+pathOutput[-3]+pathOutput[-2]
+        colorDepth = '8bit'
         newName = nm.getProcessedFileName(fileName, qualityPercent, colorDepth)
-        #print('loopTroughFunction -> NEW Filename: '+ newName)
 
         imf.saveImageAsBMP(reducedIm, newName, newPathOutput)
 
 ff.loopTroughDirectory(PATH_INPUT, outputPath8Bit, loopTroughFunction)
 
-os.system('./Bitmapizer -convert')
-
-print('All done!')
+# os.system('./Bitmapizer -convert')

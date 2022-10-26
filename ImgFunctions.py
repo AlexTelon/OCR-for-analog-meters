@@ -1,5 +1,6 @@
 from PIL import Image
 import math
+from pathlib import Path
 
 def makeGrayscale(im):
     
@@ -14,8 +15,8 @@ def cropImage(im: Image, box):
     return cropImage
 
 
-def saveImageAsBMP(im, fileName, path):
-    im.save(path+fileName+'.bmp')
+def saveImageAsBMP(im: Image, fileName: str, path: Path):
+    im.save(path / (fileName+'.bmp'))
 
 
 def reduceQualityOfImage(im, reducePercentage):
