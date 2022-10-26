@@ -37,23 +37,20 @@ PATH_INPUT.mkdir(exist_ok=True)
 output_path_8bit = (PATH_OUTPUT / '8bit')
 
 def loop_through_function(file_path, filename, path_output):
-    for i in range(0, AMMOUNT_OF_STEPS+1):
-        # the quality of the picture in pixels, 100 is orgininal quality
-        quality_percent = 100 - (i * PERCENT_TO_REDUCE)
-
-        new_path_output = path_output / f"{quality_percent}ppt"
-        ff.make_directory(new_path_output)
+    # The quality of the picture in pixels, 100 is original quality.
+    for quality_percent in range(10, 101, 10):
         im = Image.open(file_path / filename)
 
         # Removed crop since my sample image does not need it
         # croppedIm = imf.cropImage(im, SQUARE)
         # greyIm = imf.makeGrayscale(croppedIm)
-
         grey_im    = imf.make_grayscale(im)
-        reduced_im = imf.reduce_quality_of_image(grey_im, i*PERCENT_TO_REDUCE)
+        reduced_im = imf.reduce_quality_of_image(grey_im, (100 - quality_percent))
 
-        name = "_".join([Path(filename).stem, '8bit', f'{quality_percent}ppt'])
-        imf.save_iamge_as_bmp(reduced_im, name, new_path_output)
+        name = "_".join([Path(filename).stem, '8bit', f'{quality_percent}ppt']) + '.bmp'
+        new_path_output = path_output / f"{quality_percent}ppt"
+        ff.make_directory(new_path_output)
+        reduced_im.save(new_path_output / name)
 
 for file in PATH_INPUT.glob('*.bmp'):
     print(f'loop_through_directory ->On file: {file}')
