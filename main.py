@@ -13,12 +13,6 @@ from pathlib import Path
 # The last two numbers represent lower right corner of the square
 # SQUARE = (130, 300, 270, 370)
 
-# The ammount of pixels that are reduced for each step
-PERCENT_TO_REDUCE = 10
-
-# The ammount steps with reduction that are taken
-AMMOUNT_OF_STEPS = 9
-
 #-------------------------------------------------------------------------
 
 # Make bitmaps from the bin files and store them in the input folder:
