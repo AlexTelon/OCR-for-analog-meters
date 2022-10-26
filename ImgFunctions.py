@@ -2,8 +2,10 @@ from PIL import Image
 import math
 from pathlib import Path
 
-def make_grayscale(im: Image) -> Image:
-    return im.convert('L')
+def make_grayscale(im: Image, bits: int) -> Image:
+    if bits not in [1, 8]:
+        raise NotImplementedError(f"make_grayscale does not support {bits} bits")
+    return im.convert('L' if bits == 8 else '1')
 
 def crop_image(im: Image, box) -> Image:
     return im.crop(box)
