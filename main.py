@@ -98,14 +98,4 @@ for steps in product(quality_funcs, greyscale_funs, invert_funcs):
         # Store the final image, name the file according to the steps taken.
         im.save(PATH_OUTPUT / ('_'.join(f.name for f in comb) + '.bmp'))
 
-# This now seems to create 1bit and 8bit as expected.
-# But pillow does not support 2bit or 4bit so those are missing.
-# for bits in [1, 8]:
-#     output_path = (PATH_OUTPUT / f'{bits}bit')
-#     output_path.mkdir(exist_ok=True)
-#     for file in PATH_INPUT.glob('*.bmp'):
-#         print(f'loop_through_directory ->On file: {file}')
-#         loop_through_function(PATH_INPUT, file.name, output_path, bits)
-
-
 # os.system('./Bitmapizer -convert')
