@@ -80,19 +80,32 @@ class Filter:
     #     return f"{self.name}"
 
 # All the quality reducing variants in a list.
-quality_funcs = [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(1, 20, 1)]
+# quality_funcs = [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(1, 20, 1)]
+quality_funcs = [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in [5, 10]]
 # All the to_grayscale variants in a list.
 greyscale_funs = [Filter(imf.make_grayscale, f'{bits}bits', bits=bits) for bits in [1,8]]
 invert_funcs = [Filter(ImageOps.invert, f'invert')]
 
 # blur did not work well
-blur_funcs = [Filter(lambda im: im.filter(ImageFilter.BLUR), 'blur'), Filter(lambda im: im, 'no_blur')]
-# minfilter did not work well..
-minfilter_funcs = [Filter(lambda im: im.filter(ImageFilter.MinFilter(3)), 'minfilter_3'), Filter(lambda im: im, 'no_minfilter')]
+blur_funcs = [
+    Filter(lambda im: im.filter(ImageFilter.BLUR), 'blur'),
+    Filter(lambda im: im, '')
+    ]
+
+minfilter_funcs = [
+    Filter(lambda im: im.filter(ImageFilter.MinFilter(1)), 'minfilter_1'),
+    Filter(lambda im: im.filter(ImageFilter.MedianFilter()), 'meadian_filter'),
+    Filter(lambda im: im.filter(ImageFilter.MaxFilter(1)), 'maxfilter_1'),
+    Filter(lambda im: im.filter(ImageFilter.ModeFilter(1)), 'modefilter_1'),
+    Filter(lambda im: im, '')
+    ]
+
 options = [
     quality_funcs,
     greyscale_funs,
-    invert_funcs
+    # blur_funcs,
+    invert_funcs,
+    minfilter_funcs,
 ]
 
 for steps in product(*options):
