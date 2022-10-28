@@ -29,7 +29,7 @@ PATH_OUTPUT = Path('output')
 PATH_INPUT.mkdir(exist_ok=True)
 
 # clean up the output 
-for f in PATH_OUTPUT.glob('*.bmp'):
+for f in PATH_OUTPUT.glob('*.png'):
     try:
         os.remove(f)
     except OSError as e:
