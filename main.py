@@ -80,14 +80,22 @@ class Filter:
     #     return f"{self.name}"
 
 # All the quality reducing variants in a list.
-quality_funcs = [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(10, 101, 10)]
+quality_funcs = [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(1, 20, 1)]
 # All the to_grayscale variants in a list.
 greyscale_funs = [Filter(imf.make_grayscale, f'{bits}bits', bits=bits) for bits in [1,8]]
 invert_funcs = [Filter(ImageOps.invert, f'invert')]
 
+# blur did not work well
+blur_funcs = [Filter(lambda im: im.filter(ImageFilter.BLUR), 'blur'), Filter(lambda im: im, 'no_blur')]
+# minfilter did not work well..
+minfilter_funcs = [Filter(lambda im: im.filter(ImageFilter.MinFilter(3)), 'minfilter_3'), Filter(lambda im: im, 'no_minfilter')]
+options = [
+    quality_funcs,
+    greyscale_funs,
+    invert_funcs
+]
 
-steps = []
-for steps in product(quality_funcs, greyscale_funs, invert_funcs):
+for steps in product(*options):
     for comb in permutations(steps):
         im = Image.open(PATH_INPUT / 'sample.bmp')
 
@@ -96,6 +104,6 @@ for steps in product(quality_funcs, greyscale_funs, invert_funcs):
             im = func(im)
 
         # Store the final image, name the file according to the steps taken.
-        im.save(PATH_OUTPUT / ('_'.join(f.name for f in comb) + '.bmp'))
+        im.save(PATH_OUTPUT / ('_'.join(f.name for f in comb) + '.png'))
 
 # os.system('./Bitmapizer -convert')

@@ -8,12 +8,10 @@ from collections import defaultdict
 #     # file = Path(file)
 #     shutil.copy(file, 'samples')
 
-files = list(glob('output/**/*.bmp', recursive=True))
-
 # print a markdown table with all images.
 generated_files = defaultdict(list)
 # output = []
-for file in glob('output/**/*.bmp', recursive=True):
+for file in glob('output/**/*.png', recursive=True):
     short_name = Path(file).stem
     short_name = short_name.replace('sample_','').replace('ppt','%')
     size = os.path.getsize(file)
@@ -23,7 +21,6 @@ for file in glob('output/**/*.bmp', recursive=True):
         _hash = hash(content)
 
     generated_files[_hash].append((size, short_name, file))
-    # output.append((size, f"{size:,} bytes | {short} | ![{short}]({file})"))
 
 # There may be multiple ways to get the same file.
 # Here we add them to the same row.
@@ -40,8 +37,6 @@ output = sorted(output)
 # Add a running number to the first column.
 output = [((i,) + cols) for i, cols in enumerate(output)]
 
-# f"{size:,} bytes | {short} | ![{short}]({file})"
-
 with open('output_overview.md', 'w') as f:
     content = ''
     content += 'i | Size | Conversions and order | Image\n'
@@ -49,5 +44,8 @@ with open('output_overview.md', 'w') as f:
     for i, size, short_name, file in output:
         row = f"{i} | {size:,} bytes | {short_name} | ![{i}]({file})"
         content += row + '\n'
-        # content += '\n'.join(name for _, name in output)
+        if i >= 100:
+            row = f"{i}/{len(output)} | too many rows | so excluded | the rest"
+            content += row + '\n'
+            break
     f.write(content)
