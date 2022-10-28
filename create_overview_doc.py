@@ -3,6 +3,8 @@ from pathlib import Path
 import shutil
 import os
 from collections import defaultdict
+import markdown
+
 # Move images from output to samples folder
 # for file in glob('output/**/*.bmp', recursive=True):
 #     # file = Path(file)
@@ -40,7 +42,7 @@ output = [((i,) + cols) for i, cols in enumerate(output)]
 with open('output_overview.md', 'w') as f:
     content = ''
     content += 'i | Size | Conversions and order | Image\n'
-    content += '---|-------|-------|-------\n'
+    content += '--|------|-----------------------|------\n'
     for i, size, short_name, file in output:
         row = f"{i} | {size:,} bytes | {short_name} | ![{i}]({file})"
         content += row + '\n'
@@ -49,3 +51,9 @@ with open('output_overview.md', 'w') as f:
             content += row + '\n'
             break
     f.write(content)
+
+
+
+html = markdown.markdown(content, extensions=['markdown.extensions.tables'])
+with open('overview.html', 'w') as f:
+    f.write(html)
