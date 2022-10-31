@@ -1,6 +1,32 @@
 from PIL.Image import Image
 import math
 from pathlib import Path
+from typing import List, Callable, Iterable, Tuple
+from itertools import combinations, product, permutations
+
+class Filter:
+    def __init__(self, func, name, **kwargs):
+        self.func = func
+        self.name = name
+        self.kwargs = kwargs
+
+    def __call__(self, im: Image) -> Image:
+        return self.func(im, **self.kwargs)
+
+
+def execute_steps_on_one_image(steps: List[Callable[[Image], Image]], im: Image):
+    # Run all steps.
+    for func in steps:
+        im = func(im)
+    return im
+
+
+def execute_reordered_combinations_on_one_image(options: List[List[Callable[[Image], Image]]], im: Image) -> Iterable[Tuple[List[Filter], Image]]:
+    for steps in product(*options):
+        # Run all combinations on one image
+        for comb in permutations(steps):
+            yield (comb, execute_steps_on_one_image(comb, im))
+
 
 def make_grayscale(im: Image, bits: int) -> Image:
     if bits not in [1, 8]:

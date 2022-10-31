@@ -4,15 +4,8 @@ import ImgFunctions as imf
 from pathlib import Path
 from typing import List, Callable
 from itertools import combinations, product, permutations
+from ImgFunctions import Filter
 
-class Filter:
-    def __init__(self, func, name, **kwargs):
-        self.func = func
-        self.name = name
-        self.kwargs = kwargs
-
-    def __call__(self, im: Image.Image) -> Image.Image:
-        return self.func(im, **self.kwargs)
 
 # All the quality reducing variants in a list.
 # quality_funcs = [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(1, 20, 1)]
@@ -36,22 +29,6 @@ minfilter_funcs = [
     ]
 
 
-def execute_steps_on_one_image(steps: List[Callable[[Image.Image], Image.Image]], im: Image.Image):
-    # Run all steps.
-    for func in steps:
-        im = func(im)
-
-    # Store the final image, name the file according to the steps taken.
-    im.save(PATH_OUTPUT / ('_'.join(f.name for f in steps) + '.png'))
-
-
-def execute_reordered_combinations_on_one_image(options: List[List[Callable[[Image.Image], Image.Image]]], im: Image.Image):
-    for steps in product(*options):
-        # Run all combinations on one image
-        for comb in permutations(steps):
-            execute_steps_on_one_image(comb, im)
-
-
 if __name__ == "__main__":
     # Define input and output directories and create subfolders for each colour depth:
     PATH_INPUT = Path('input')
@@ -66,7 +43,6 @@ if __name__ == "__main__":
         except OSError as e:
             print("Error: %s : %s" % (f, e.strerror))
 
-
     options = [
         quality_funcs,
         greyscale_funs,
@@ -76,7 +52,12 @@ if __name__ == "__main__":
     ]
 
     im = Image.open(PATH_INPUT / 'sample.bmp')
-    execute_reordered_combinations_on_one_image(options, im)
+    images = imf.execute_reordered_combinations_on_one_image(options, im)
+
+    for steps, im in images:
+        # Store the final image, name the file according to the steps taken.
+        im.save(PATH_OUTPUT / ('_'.join(f.name for f in steps) + '.png'))
+
     exit()
 
     # The square that the program will cut out and use
