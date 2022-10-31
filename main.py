@@ -1,17 +1,17 @@
 from PIL import Image, ImageOps, ImageMath, ImageFilter, ImageGrab
 import os
-import ImgFunctions as imf
+import img as img
 from pathlib import Path
 from typing import List, Callable
 from itertools import combinations, product, permutations
-from ImgFunctions import Filter
+from img import Filter
 
 
 # All the quality reducing variants in a list.
-# quality_funcs = [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(1, 20, 1)]
-quality_funcs = [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in [5, 10]]
+# quality_funcs = [Filter(img.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(1, 20, 1)]
+quality_funcs = [Filter(img.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in [5, 10]]
 # All the to_grayscale variants in a list.
-greyscale_funs = [Filter(imf.make_grayscale, f'{bits}bits', bits=bits) for bits in [1,8]]
+greyscale_funs = [Filter(img.make_grayscale, f'{bits}bits', bits=bits) for bits in [1,8]]
 invert_funcs = [Filter(ImageOps.invert, f'invert')]
 
 # blur did not work well
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     ]
 
     im = Image.open(PATH_INPUT / 'sample.bmp')
-    images = imf.execute_reordered_combinations_on_one_image(options, im)
+    images = img.execute_reordered_combinations_on_one_image(options, im)
 
     for steps, im in images:
         # Store the final image, name the file according to the steps taken.
@@ -68,13 +68,13 @@ if __name__ == "__main__":
 
     if False:
         options = [
-            # [Filter(lambda im: imf.crop_image(im, SQUARE), 'crop')],
+            # [Filter(lambda im: img.crop_image(im, SQUARE), 'crop')],
             invert_funcs,
-            [Filter(imf.make_grayscale, f'{1}bits', bits=1)],
+            [Filter(img.make_grayscale, f'{1}bits', bits=1)],
             [Filter(lambda im: im.filter(ImageFilter.MedianFilter(i)), f'meadian_filter_{i}') for i in [3,5]],
-            [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(10, 101, 10)],
+            [Filter(img.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(10, 101, 10)],
             [Filter(lambda im: im.filter(ImageFilter.MedianFilter(i)), f'meadian_filter_{i}') for i in [3,5]],
-            [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(10, 101, 10)],
+            [Filter(img.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(10, 101, 10)],
         ]
         for steps in product(*options):
             execute_steps_on_one_image(steps)
@@ -82,14 +82,14 @@ if __name__ == "__main__":
 
     # Here I have choosen something I belive in and want to run that on all images.
     steps = [
-        Filter(lambda im: imf.crop_image(im, SQUARE), 'crop'),
+        Filter(lambda im: img.crop_image(im, SQUARE), 'crop'),
         invert_funcs[0],
-        Filter(imf.make_grayscale, f'{1}bits', bits=1),
+        Filter(img.make_grayscale, f'{1}bits', bits=1),
         # blur_funcs,
         Filter(lambda im: im.filter(ImageFilter.MedianFilter(3)), 'meadian_filter'),
-        [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in [60]][0],
+        [Filter(img.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in [60]][0],
         Filter(lambda im: im.filter(ImageFilter.MedianFilter(3)), 'meadian_filter'),
-        [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in [30]][0],
+        [Filter(img.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in [30]][0],
     ]
 
     for i, filename in enumerate(PATH_INPUT.glob('*.bmp')):

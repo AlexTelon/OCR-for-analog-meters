@@ -36,9 +36,6 @@ def make_grayscale(im: Image, bits: int) -> Image:
 def crop_image(im: Image, box) -> Image:
     return im.crop(box)
 
-def save_iamge_as_bmp(im: Image, fileName: str, path: Path) -> None:
-    im.save(path / (fileName+'.bmp'))
-
 def reduce_quality_of_image(im: Image, reduce_percentage: float) -> Image:
     if reduce_percentage < 0:
         return im
