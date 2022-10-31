@@ -1,8 +1,7 @@
 from PIL.Image import Image
 import math
-from pathlib import Path
 from typing import List, Callable, Iterable, Tuple
-from itertools import combinations, product, permutations
+from itertools import product, permutations
 
 class Filter:
     def __init__(self, func, name, **kwargs):
