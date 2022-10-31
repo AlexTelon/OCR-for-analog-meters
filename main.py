@@ -1,4 +1,4 @@
-from PIL import Image, ImageOps, ImageMath, ImageFilter
+from PIL import Image, ImageOps, ImageMath, ImageFilter, ImageGrab
 import os
 import ImgFunctions as imf
 import FileFunctions as ff
@@ -6,16 +6,9 @@ from pathlib import Path
 from typing import List, Callable
 from functools import partial
 from itertools import combinations, product, permutations
+import numpy as nm
 
 #                       Settings for the program
-#-------------------------------------------------------------------------
-
-# Not needed with my current sample image. too lazy to edit it to the original size right now.
-# The square that the program will cut out and use
-# The first two numbers represent upper left corner of the square
-# The last two numbers represent lower right corner of the square
-# SQUARE = (130, 300, 270, 370)
-
 #-------------------------------------------------------------------------
 
 # Make bitmaps from the bin files and store them in the input folder:
@@ -76,8 +69,6 @@ class Filter:
     def __call__(self, im: Image.Image) -> Image.Image:
         return self.func(im, **self.kwargs)
 
-    # def __str__(self):
-    #     return f"{self.name}"
 
 # All the quality reducing variants in a list.
 # quality_funcs = [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(1, 20, 1)]
@@ -108,15 +99,68 @@ options = [
     minfilter_funcs,
 ]
 
-for steps in product(*options):
-    for comb in permutations(steps):
-        im = Image.open(PATH_INPUT / 'sample.bmp')
+def execute_steps_on_one_image(steps):
+    im = Image.open(PATH_INPUT / 'sample.bmp')
+
+    # Run all steps.
+    for func in steps:
+        im = func(im)
+
+    # Store the final image, name the file according to the steps taken.
+    im.save(PATH_OUTPUT / ('_'.join(f.name for f in steps) + '.png'))
+
+
+def execute_reordered_combinations_on_one_image(options):
+    # Run all combinations on one image
+    for steps in product(*options):
+        for comb in permutations(steps):
+            execute_steps_on_one_image(comb)
+            
+if __name__ == "__main__":
+    execute_reordered_combinations_on_one_image(options)
+    exit()
+
+    # The square that the program will cut out and use
+    # The first two numbers represent upper left corner of the square
+    # The last two numbers represent lower right corner of the square
+    # SQUARE = (130, 300, 270, 370)
+    SQUARE = (170, 250, 747, 340)
+
+    if False:
+        options = [
+            # [Filter(lambda im: imf.crop_image(im, SQUARE), 'crop')],
+            invert_funcs,
+            [Filter(imf.make_grayscale, f'{1}bits', bits=1)],
+            [Filter(lambda im: im.filter(ImageFilter.MedianFilter(i)), f'meadian_filter_{i}') for i in [3,5]],
+            [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(10, 101, 10)],
+            [Filter(lambda im: im.filter(ImageFilter.MedianFilter(i)), f'meadian_filter_{i}') for i in [3,5]],
+            [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(10, 101, 10)],
+        ]
+        for steps in product(*options):
+            execute_steps_on_one_image(steps)
+        exit()
+
+    # Here I have choosen something I belive in and want to run that on all images.
+    steps = [
+        Filter(lambda im: imf.crop_image(im, SQUARE), 'crop'),
+        invert_funcs[0],
+        Filter(imf.make_grayscale, f'{1}bits', bits=1),
+        # blur_funcs,
+        Filter(lambda im: im.filter(ImageFilter.MedianFilter(3)), 'meadian_filter'),
+        [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in [60]][0],
+        Filter(lambda im: im.filter(ImageFilter.MedianFilter(3)), 'meadian_filter'),
+        [Filter(imf.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in [30]][0],
+    ]
+
+    for i, filename in enumerate(PATH_INPUT.glob('*.bmp')):
+        if filename.name == 'sample.bmp': continue
+        im = Image.open(filename)
 
         # Run all steps.
-        for func in comb:
+        for func in steps:
             im = func(im)
 
         # Store the final image, name the file according to the steps taken.
-        im.save(PATH_OUTPUT / ('_'.join(f.name for f in comb) + '.png'))
-
-# os.system('./Bitmapizer -convert')
+        im.save(PATH_OUTPUT / (filename.stem + '_'.join(f.name for f in steps) + '.png'))
+        if i > 10:
+            break
