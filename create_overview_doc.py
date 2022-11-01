@@ -10,11 +10,11 @@ import markdown
 #     # file = Path(file)
 #     shutil.copy(file, 'samples')
 
-def create_doc():
+def create_doc(glob_pattern='output/**/*.png'):
     # print a markdown table with all images.
     generated_files = defaultdict(list)
     # output = []
-    for file in glob('output/**/*.png', recursive=True):
+    for file in glob(glob_pattern, recursive=True):
         short_name = Path(file).stem
         short_name = short_name.replace('sample_','').replace('ppt','%')
         size = os.path.getsize(file)
