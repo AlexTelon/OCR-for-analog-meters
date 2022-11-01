@@ -3,6 +3,8 @@ from pathlib import Path
 from collections import defaultdict
 import create_overview_doc
 from glob import glob
+import random
+
 
 def create_digit_images(path_output):
     # TODO this assuems that output contains those 2000 images that main.py can generate atm.
@@ -31,23 +33,12 @@ def create_digit_images(path_output):
         # images[digit].append(im)
         im.save(path_output / f"{digit}" / f"{filename.name}")
 
-# def get_digit_images():
-#     files = glob('output/**/*.png')
-
-#     images = defaultdict(list)
-#     for i, filename in enumerate(files):
-#         _, _, pos, digit = filename.stem.split('_')
-#         digit = int(digit.strip('digit='))
-        
-#         im = Image.open(filename)
-        
-#         box = Image.getbbox(im)
-#         images[digit].append(im.crop(box))
 
 def print_pixels(im: Image.Image):
     for row in get_rows(im):
         row = ['.#'[x==255] for x in row]
         print(''.join(row))
+
 
 def get_rows(im: Image.Image):
     width, height = im.size
@@ -56,18 +47,43 @@ def get_rows(im: Image.Image):
     rows = [data[y*width:(y+1)*width] for y in range(height)]
     return rows
 
+
+def produce_heatmap(images):
+    grid = [[0] * width for _ in range(height)]
+    n = len(images)
+
+    for im in images:
+        for y, row in enumerate(get_rows(im)):
+            for x, value in enumerate(row):
+                grid[y][x] += [0,1][value == 0]
+    
+    for y, row in enumerate(grid):
+        for x, value in enumerate(row):
+            grid[y][x] /= n
+    return grid
+
+
+def print_grid(grid):
+    for row in grid:
+        # print(' '.join(f"{x:.1f}" if x != 0 else ' ' for x in row))
+        print(' '.join(f"{x:.1f}" if x > 0.2 else '   ' for x in row))
+
+
 if __name__ == "__main__":
     # PATH_OUTPUT = Path('digits_images')
     # create_digit_images(PATH_OUTPUT)
     # create_overview_doc.create_doc(f"{PATH_OUTPUT}/**/*.png")
 
     files = list(Path('digits_images').glob('**/*.png'))
+    random.shuffle(files)
+    n = len(files)
+    training_files   = files[:round(n*0.8)]
+    validation_files = files[round(n*0.8):]
+
 
     digit_images = defaultdict(list)
     sizes = set()
-
-    n = len(files)
-    for i, filename in enumerate(files):
+    for i, filename in enumerate(training_files):
         _, _, pos, digit = filename.stem.split('_')
         digit = int(digit.strip('digit='))
         
@@ -82,35 +98,22 @@ if __name__ == "__main__":
         digit_images[digit].append(im)
 
         # Train on first 80%, compare against the rest.
-        # if i > 0.8 * n:
-        #     break
+        if i > 0.8 * n:
+            break
 
         # print_pixels(im)
         # print()
     assert len(sizes) == 1
     width, height = sizes.pop()
 
-    def print_grid(grid):
-        for row in grid:
-            # print(' '.join(f"{x:.1f}" if x != 0 else ' ' for x in row))
-            print(' '.join(f"{x:.1f}" if x > 0.2 else '   ' for x in row))
 
     # Produce a heatmap.
+    heatmap = {}
     for i in range(10):
-        grid = [[0] * width for _ in range(height)]
-        
-        for im in digit_images[i]:
-            for y, row in enumerate(get_rows(im)):
-                for x, value in enumerate(row):
-                    grid[y][x] += [0,1][value == 0]
-        
-        n = len(digit_images[i])
-        if n == 0:
-            print(f"{i} is 0")
-        else:
-            for y, row in enumerate(grid):
-                for x, value in enumerate(row):
-                    grid[y][x] /= n
+        grid = produce_heatmap(digit_images[i])
+        heatmap[i] = grid
 
-            print_grid(grid)
-            print()
+
+    for digit, grid in heatmap.items():
+        print_grid(grid)
+        print()
