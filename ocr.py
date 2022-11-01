@@ -4,6 +4,7 @@ from collections import defaultdict
 import create_overview_doc
 from glob import glob
 import random
+import math
 
 
 def create_digit_images(path_output):
@@ -75,17 +76,28 @@ def print_grid(grid):
         # print(' '.join(f"{x:.1f}" if x != 0 else ' ' for x in row))
         print(' '.join(f"{x:.1f}" if x > 0.2 else '   ' for x in row))
 
-def _dist(A, B):
+def _dist(A, B, offset_x=0, offset_y=0):
     diffs = 0
-    for aa, bb in zip(A, B):
-        for a, b in zip(aa, bb):
+    for y, row in enumerate(A):
+        for x, a in enumerate(row):
+            try:
+                b = B[y-offset_y][x-offset_x]
+            except IndexError:
+                b = 0
             diffs += abs(a - b)
     return diffs
 
 def dist(A, B):
     # Move A around over B to find the best overlap!
-    # Not implemented yet though
-    return _dist(A, B)
+    height = len(A)
+    width = len(A[0])
+
+    distances = []
+    for dy in range(-5, 6):
+        for dx in range(-5, 6):
+            distances.append(_dist(A, B, dx, dy))
+
+    return min(distances)
 
 def closest(grid, heatmap):
     distances = {}
@@ -110,8 +122,8 @@ if __name__ == "__main__":
     images = []
     sizes = set()
     for i, filename in enumerate(files):
-        _, _, pos, digit = filename.stem.split('_')
-        digit = int(digit.strip('digit='))
+        _, _, pos, expected = filename.stem.split('_')
+        expected = int(expected.strip('digit='))
         
         im = Image.open(filename)
         sizes.add(im.size)
@@ -120,20 +132,20 @@ if __name__ == "__main__":
         # im = ImageOps.invert(im)
         # im = im.crop(im.getbbox())
         # im = ImageOps.invert(im)
-        images.append((digit, im))
+        images.append((expected, im))
 
 
     n = len(images)
-    training_files   = images[:round(n*0.8)]
-    validation_files = images[round(n*0.8):]
+    training_files   = images[:round(n*0.9)]
+    validation_files = images[round(n*0.9):]
 
     training_images = defaultdict(list)
-    for digit, im in training_files:
-        training_images[digit].append(im)
+    for expected, im in training_files:
+        training_images[expected].append(im)
 
     validation_images = defaultdict(list)
-    for digit, im in validation_files:
-        validation_images[digit].append(im)
+    for expected, im in validation_files:
+        validation_images[expected].append(im)
 
     assert len(sizes) == 1
     width, height = sizes.pop()
@@ -144,12 +156,21 @@ if __name__ == "__main__":
         grid = produce_heatmap(training_images[i])
         heatmap[i] = grid
 
+    # Place to save failed images.
+    output_path = Path("output") / "ocr"
+    output_path.mkdir(exist_ok=True)
+
     results = []
-    for digit, im in validation_files:
+    error_images = []
+    for expected, im in validation_files:
         grid = to_grid(im)
         guess = closest(grid, heatmap)
-        print(f"correct: {digit}, guess: {guess} ", "Ok!" if guess == digit else '')
-        results.append(guess == digit)
+        print(f"correct: {expected}, guess: {guess} ", "Ok!" if guess == expected else '')
+        results.append(guess == expected)
+
+        if guess != expected:
+            # error_images.append((guess, digit, im))
+            im.save(output_path / f"{guess=}_{expected=}.png")
     
     accuracy = sum(results) / len(results)
     print(f"{accuracy:%}")
