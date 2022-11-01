@@ -47,6 +47,13 @@ def get_rows(im: Image.Image):
     rows = [data[y*width:(y+1)*width] for y in range(height)]
     return rows
 
+def to_grid(im: Image.Image):
+    grid = get_rows(im)
+    for y, row in enumerate(grid):
+        for x, value in enumerate(row):
+            grid[y][x] = [0,1][value == 0]
+    return grid
+
 
 def produce_heatmap(images):
     grid = [[0] * width for _ in range(height)]
@@ -68,6 +75,29 @@ def print_grid(grid):
         # print(' '.join(f"{x:.1f}" if x != 0 else ' ' for x in row))
         print(' '.join(f"{x:.1f}" if x > 0.2 else '   ' for x in row))
 
+def _dist(A, B):
+    diffs = 0
+    for aa, bb in zip(A, B):
+        for a, b in zip(aa, bb):
+            diffs += abs(a - b)
+    return diffs
+
+def dist(A, B):
+    # Move A around over B to find the best overlap!
+    # Not implemented yet though
+    return _dist(A, B)
+
+def closest(grid, heatmap):
+    distances = {}
+    for key, ref in heatmap.items():
+        distances[key] = dist(ref, grid)
+
+    # for key, value in distances.items():
+    #     print(key, value)
+
+    digit, _ = min(distances.items(), key=lambda x: x[1])
+    return digit
+
 
 if __name__ == "__main__":
     # PATH_OUTPUT = Path('digits_images')
@@ -76,14 +106,10 @@ if __name__ == "__main__":
 
     files = list(Path('digits_images').glob('**/*.png'))
     random.shuffle(files)
-    n = len(files)
-    training_files   = files[:round(n*0.8)]
-    validation_files = files[round(n*0.8):]
 
-
-    digit_images = defaultdict(list)
+    images = []
     sizes = set()
-    for i, filename in enumerate(training_files):
+    for i, filename in enumerate(files):
         _, _, pos, digit = filename.stem.split('_')
         digit = int(digit.strip('digit='))
         
@@ -94,26 +120,40 @@ if __name__ == "__main__":
         # im = ImageOps.invert(im)
         # im = im.crop(im.getbbox())
         # im = ImageOps.invert(im)
+        images.append((digit, im))
 
-        digit_images[digit].append(im)
 
-        # Train on first 80%, compare against the rest.
-        if i > 0.8 * n:
-            break
+    n = len(images)
+    training_files   = images[:round(n*0.8)]
+    validation_files = images[round(n*0.8):]
 
-        # print_pixels(im)
-        # print()
+    training_images = defaultdict(list)
+    for digit, im in training_files:
+        training_images[digit].append(im)
+
+    validation_images = defaultdict(list)
+    for digit, im in validation_files:
+        validation_images[digit].append(im)
+
     assert len(sizes) == 1
     width, height = sizes.pop()
-
 
     # Produce a heatmap.
     heatmap = {}
     for i in range(10):
-        grid = produce_heatmap(digit_images[i])
+        grid = produce_heatmap(training_images[i])
         heatmap[i] = grid
 
+    results = []
+    for digit, im in validation_files:
+        grid = to_grid(im)
+        guess = closest(grid, heatmap)
+        print(f"correct: {digit}, guess: {guess} ", "Ok!" if guess == digit else '')
+        results.append(guess == digit)
+    
+    accuracy = sum(results) / len(results)
+    print(f"{accuracy:%}")
 
-    for digit, grid in heatmap.items():
-        print_grid(grid)
-        print()
+    # for digit, grid in heatmap.items():
+    #     print_grid(grid)
+    #     print()
