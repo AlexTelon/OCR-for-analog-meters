@@ -5,7 +5,7 @@ from pathlib import Path
 from itertools import product
 from img import Filter
 import create_overview_doc
-
+import to_digits
 
 if __name__ == "__main__":
     # Define input and output directories and create subfolders for each colour depth:
@@ -36,28 +36,20 @@ if __name__ == "__main__":
     lower_right = (747, 340)
     SQUARE = (*upper_left, *lower_right)
 
-    # options = [
-    #     # [Filter(lambda im: img.crop_image(im, SQUARE), 'crop')],
-    #     invert_funcs,
-    #     [Filter(img.make_grayscale, f'{1}bits', bits=1)],
-    #     [Filter(lambda im: im.filter(ImageFilter.MedianFilter(i)), f'meadian_filter_{i}') for i in [3,5]],
-    #     [Filter(img.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(10, 101, 10)],
-    #     [Filter(lambda im: im.filter(ImageFilter.MedianFilter(i)), f'meadian_filter_{i}') for i in [3,5]],
-    #     [Filter(img.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in range(10, 101, 10)],
-    # ]
-    # for steps in product(*options):
-    #     execute_steps_on_one_image(steps)
-    # exit()
-
     # Here I have choosen something I belive in and want to run that on all images.
     steps = [
         Filter(lambda im: img.crop_image(im, SQUARE), 'crop'),
         Filter(ImageOps.invert, f'invert'),
-        Filter(img.make_grayscale, f'{1}bits', bits=1),
+        Filter(img.make_grayscale, f'{8}bits', bits=8),
+        # Filter(img.make_grayscale, f'{1}bits', bits=1),
         Filter(lambda im: im.filter(ImageFilter.MedianFilter(3)), 'meadian_filter'),
         [Filter(img.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in [60]][0],
         Filter(lambda im: im.filter(ImageFilter.MedianFilter(3)), 'meadian_filter'),
         [Filter(img.reduce_quality_of_image, f'{quality_percent}ppt', reduce_percentage=(100 - quality_percent)) for quality_percent in [30]][0],
+        # TODO wut is this and 255 stuff?
+        Filter(lambda im: im.point(lambda p: p < 100 and 255), 'threshold_'),
+        Filter(ImageOps.invert, f'invert'),
+        Filter(img.make_grayscale, f'{1}bits', bits=1),
     ]
 
     for i, filename in enumerate(PATH_INPUT.glob('*.bmp')):
@@ -65,9 +57,20 @@ if __name__ == "__main__":
 
         im = img.execute_steps_on_one_image(steps, im=Image.open(filename))
 
-        # Store the final image, name the file according to the steps taken.
-        name_parts = [filename.stem] + [f.name for f in steps]
-        im.save(PATH_OUTPUT / ('_'.join(name_parts) + '.png'))
+        digit_images = to_digits.to_digits(im)
 
+        # picture22_00048221 -> correct digit
+        _, correct_digits = filename.stem.split('_')
+        for j, im in enumerate(digit_images):
+            # if j in [5]: # the 6th digits is usually the one with most noice.
+            # Store the final image, name the file according to the steps taken.
+            # name_parts = [filename.stem] + [f.name for f in steps] + [f"digit=[{correct_digits[j]}]"]
+
+            # Store image witha name containing information about the digit.
+            name_parts = [filename.stem] + [f"pos={j}", f"digit={correct_digits[j]}"]
+            im.save(PATH_OUTPUT / ('_'.join(name_parts) + '.png'))
+
+        # if i > 10:
+        #     break
 
     create_overview_doc.create_doc()
