@@ -26,6 +26,7 @@ minfilter_funcs = [
     Filter(lambda im: im, '')
     ]
 
+thresholds = [Filter(lambda im: im.point(lambda p: p < limit and 255), f'threshold_{limit}') for limit in range(0, 150, 10)]
 
 if __name__ == "__main__":
     # This file will try a lot of combinations on the sample.bmp image
@@ -45,11 +46,14 @@ if __name__ == "__main__":
             print("Error: %s : %s" % (f, e.strerror))
 
     options = [
+        [Filter(img.make_grayscale, f'{8}bits', bits=8)],
         quality_funcs,
-        greyscale_funs,
+        # greyscale_funs,
         # blur_funcs,
         invert_funcs,
-        minfilter_funcs,
+        # minfilter_funcs,
+        thresholds,
+        [Filter(img.make_grayscale, f'{1}bits', bits=1)],
     ]
 
     im = Image.open(PATH_INPUT / 'sample.bmp')
